@@ -1,0 +1,37 @@
+- name: include password
+  include_vars:
+    file: vars/proxmox_root_password.yml
+
+- name: create container
+  proxmox:
+    vmid: "{{ lxc_vmid }}"
+    node: "{{ inventory_hostname }}"
+    api_user: root@pam
+    api_password: "{{ proxmox_root_password }}"
+    api_host: "{{ inventory_hostname }}"
+    hostname: "{{ lxc_hostname }}"
+    ostemplate: "{{ lxc_template }}"
+    storage: local-lvm
+    pool: "{{ lxc_pool }}"
+    password: "{{ proxmox_root_password }}"
+    cores: "{{ lxc_cores }}"
+    memory: "{{ lxc_memory }}"
+    swap: "{{ lxc_swap }}"
+    disk: "{{ lxc_disk_gb }}"
+    netif: '{"net0":"name=eth0,{{ lxc_network }},bridge=vmbr0"}'
+    features:
+      - "nesting={{ lxc_nesting }}"
+    state: present
+  register: lxc_output
+
+- name: read vmid
+  set_fact:
+    vmid: "{{ lxc_output.msg | regex_search('\\b\\d{1,}\\b') }}"
+
+- name: make sure container is started
+  proxmox:
+    vmid: "{{ vmid }}"
+    api_user: root@pam
+    api_password: "{{ proxmox_root_password }}"
+    api_host: "{{ inventory_hostname }}"
+    state: started
