@@ -1,0 +1,9 @@
+---
+- hosts: lxc
+  remote_user: root
+
+  tasks:
+   - name: Update lxc
+     command:
+        cmd: update
+     register: lxc_update
